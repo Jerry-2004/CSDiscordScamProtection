@@ -29,3 +29,36 @@ def create_tables():
                 banned_on DATETIME DEFAULT CURRENT_TIMESTAMP
             );
         """)
+
+        # Table to store whitelisted servers
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS whitelisted_guilds (
+                guild_id TEXT PRIMARY KEY
+            );
+        """)
+
+def add_guild_to_whitelist(guild_id: int):
+    with connect() as conn:
+        c = conn.cursor()
+        c.execute("INSERT OR IGNORE INTO whitelisted_guilds (guild_id) VALUES (?)", (str(guild_id),))
+        conn.commit()
+
+
+def remove_guild_from_whitelist(guild_id: int):
+    with connect() as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM whitelisted_guilds WHERE guild_id = ?", (str(guild_id),))
+        conn.commit()
+
+def is_guild_whitelisted(guild_id: int) -> bool:
+    with connect() as conn:
+        c = conn.cursor()
+        c.execute("SELECT 1 FROM whitelisted_guilds WHERE guild_id = ?", (str(guild_id),))
+        return c.fetchone() is not None
+
+
+def get_all_whitelisted_guilds():
+    with connect() as conn:
+        c = conn.cursor()
+        c.execute("SELECT guild_id FROM whitelisted_guilds")
+        return [int(row[0]) for row in c.fetchall()]
