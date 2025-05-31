@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 import os
+import asyncio
 
 import constants
 import db
@@ -15,10 +16,16 @@ intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
 
-bot = commands.Bot(command_prefix=";", intents=intents)
+bot = commands.Bot(command_prefix=constants.COMMAND_PREFIX, intents=intents, help_command=None)
 
 
-# Decorator function to block commands if the server is not in the whitelisted table
+async def main():
+    await bot.load_extension("cogs.help")  # ✅ Await this properly now
+    print(bot.commands)
+    await bot.start(TOKEN)
+
+
+# Decorator function to block cogs if the server is not in the whitelisted table
 def is_whitelisted():
     async def predicate(ctx):
         # ctx.guild is None if the command is used in a DM
@@ -27,6 +34,13 @@ def is_whitelisted():
 
         return db.is_guild_whitelisted(ctx.guild.id)
 
+    return commands.check(predicate)
+
+
+# Decorator function to check whether a user is a moderator
+def is_moderator():
+    async def predicate(ctx):
+        return ctx.author.guild_permissions.manage_messages
     return commands.check(predicate)
 
 
@@ -64,9 +78,5 @@ async def on_ready():
         else:
             # Channel exists, so just send bot online message
             await mod_channel.send("Bot is online.")
-@bot.command()
-@is_whitelisted()
-async def ping(ctx):
-    await ctx.send("Pong!")
 
-bot.run(TOKEN)
+asyncio.run(main())
