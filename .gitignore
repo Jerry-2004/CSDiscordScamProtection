@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 data/
 whitelist_add.py
+whitelist_remove.py
