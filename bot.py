@@ -23,6 +23,7 @@ async def main():
     await bot.load_extension("cogs.help")
     await bot.load_extension("cogs.ban")
     await bot.load_extension("cogs.servers")
+    await bot.load_extension("cogs.about")
     print(bot.commands)
     await bot.start(TOKEN)
 
