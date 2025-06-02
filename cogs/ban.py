@@ -25,6 +25,10 @@ class Ban(commands.Cog):
             await ctx.send("You cannot ban yourself.")
             return
 
+        if user.id == self.bot.user.id:
+            await ctx.send("You cannot ban the bot using the bot.")
+            return
+
         await ctx.send(f"Preparing to ban user {user.display_name} (ID: {user_id}).")
         await ctx.send("Please state the reason for the ban:")
 
