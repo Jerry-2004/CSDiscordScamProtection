@@ -11,7 +11,7 @@ class Servers(commands.Cog):
 
     @commands.command(name='servers')
     # Unsure whether to add check for moderator here. Added for now (TODO)
-    @commands.check(is_moderator())
+    @is_moderator()
     async def servers(self, ctx):
         whitelisted_guild_ids = db.get_all_whitelisted_guilds()
 

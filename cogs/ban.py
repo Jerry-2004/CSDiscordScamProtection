@@ -5,13 +5,15 @@ import asyncio
 import constants
 import db
 from decorators import is_moderator, is_whitelisted
+
+
 class Ban(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(name='ban')
-    @commands.check(is_moderator())
-    @commands.check(is_whitelisted())
+    @is_moderator()
+    @is_whitelisted()
     async def ban(self, ctx, user_id: int):
         # Fetch user from guild
         user = ctx.guild.get_member(user_id)

@@ -4,7 +4,8 @@ import db
 
 # Decorator function to check whether a user is a moderator
 def is_moderator():
-    async def predicate(ctx):
+    def predicate(ctx):
+        print(f"Checking moderator for: {ctx.author} - Has permission: {ctx.author.guild_permissions.manage_messages}")
         return ctx.author.guild_permissions.manage_messages
     return commands.check(predicate)
 

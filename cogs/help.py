@@ -1,6 +1,7 @@
 from discord.ext import commands
 import discord
 
+from decorators import is_whitelisted
 
 class Help(commands.Cog):
     def __init__(self, bot):
@@ -9,6 +10,7 @@ class Help(commands.Cog):
 
 
     @commands.command(name='help')
+    @is_whitelisted()
     async def help_command(self, ctx):
         try:
             embed = discord.Embed(
