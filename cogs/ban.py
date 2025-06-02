@@ -52,7 +52,7 @@ class Ban(commands.Cog):
                 return
 
             # Ban user
-            await ctx.guild.ban(user, reason=reason)
+            await ctx.guild.ban(user, reason=reason, delete_message_days=0)
             await ctx.send(f"User {user.display_name} has been banned.")
 
             # Save ban to DB
