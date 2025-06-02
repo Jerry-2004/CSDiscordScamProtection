@@ -89,3 +89,10 @@ def record_ban(user_id: int, guild_id: int, moderator_id: int, reason: str, evid
             VALUES (?, ?, ?, ?, ?)
         """, (user_id, guild_id, moderator_id, reason, evidence))
         conn.commit()
+
+
+def remove_ban_from_bans(user_id: int):
+    with connect() as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM bans WHERE user_id = ?", (str(user_id),))
+        conn.commit()

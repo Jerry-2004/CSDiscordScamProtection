@@ -50,6 +50,7 @@ def is_moderator():
 @bot.event
 async def on_ready():
     print(f"Bot is online as {bot.user}")
+    print("Printing tables")
     db.create_tables()
 
     MOD_CHANNEL_NAME = constants.OPERATING_CHANNEL_NAME
