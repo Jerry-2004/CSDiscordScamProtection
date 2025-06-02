@@ -7,6 +7,60 @@ import db
 from decorators import is_moderator, is_whitelisted
 
 
+class BanReasonView(discord.ui.View):
+    def __init__(self, reasons, author: discord.User, timeout=60):
+        super().__init__(timeout=timeout)
+        self.selected_reason = None
+        self.author = author
+        for reason in reasons:
+            self.add_item(BanReasonButton(reason))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.author.id:
+            return False
+        return True
+
+    async def on_timeout(self):
+        for child in self.children:
+            child.disabled = True
+
+
+class BanReasonButton(discord.ui.Button):
+    def __init__(self, reason):
+        super().__init__(label=reason, style=discord.ButtonStyle.primary)
+        self.reason = reason
+
+    async def callback(self, interaction: discord.Interaction):
+        view: BanReasonView= self.view
+        view.selected_reason = self.reason
+        await interaction.response.defer()
+        self.view.stop()
+
+
+class ConfirmView(discord.ui.View):
+    def __init__(self, author: discord.User, timeout=60):
+        super().__init__(timeout=timeout)
+        self.author = author
+        self.confirmed = None
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.author.id:
+            return False
+        return True
+
+    @discord.ui.button(label="Confirm", style=discord.ButtonStyle.danger)
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.confirmed = True
+        await interaction.response.defer()
+        self.stop()
+
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.secondary)
+    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.confirmed = False
+        await interaction.response.defer()
+        self.stop()
+
+
 class Ban(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -30,30 +84,71 @@ class Ban(commands.Cog):
             return
 
         await ctx.send(f"Preparing to ban user {user.display_name} (ID: {user_id}).")
-        await ctx.send("Please state the reason for the ban:")
+
+        reasons = constants.BAN_REASONS
+        view = BanReasonView(author=ctx.author, reasons=reasons)
+        msg = await ctx.send("Select a reason for the ban:", view=view)
+        await view.wait()
+
+        if view.selected_reason is None:
+            await ctx.send("Timeout or no reason selected.")
+            return
+
+        reason = view.selected_reason
+
+        await ctx.send("Please provide evidence (e.g. message links, screenshots):")
 
         def check(m):
             return m.author == ctx.author and m.channel == ctx.channel
 
         try:
-            reason_msg = await self.bot.wait_for('message', check=check, timeout=120)
-            reason = reason_msg.content
-
-            await ctx.send("Please provide evidence (e.g. message links, screenshots):")
-            evidence_msg = await self.bot.wait_for('message', check=check, timeout=120)
+            evidence_msg = await self.bot.wait_for('message',check=check, timeout=120)
             evidence = evidence_msg.content
+        except asyncio.TimeoutError:
+            await ctx.send("Timed out waiting for evidence")
+            return
 
-            # Confirmation prompt
-            await ctx.send(f"Ban user {user.display_name} for reason:\n**{reason}**\nEvidence:\n{evidence}\nType 'confirm' to ban or 'cancel' to abort.")
+        embed = discord.Embed(
+            title="Ban Confirmation",
+            description=f"**User**: {user.mention}\n**Reason**: {reason}\n**Evidence**: {evidence}",
+            color=discord.Color.red()
+        )
 
-            confirm_msg = await self.bot.wait_for('message', check=check, timeout=60)
-            if confirm_msg.content.lower() != 'confirm':
-                await ctx.send("Ban cancelled.")
-                return
+        confirm_view = ConfirmView(author=ctx.author)
+        await ctx.send(embed=embed, view=confirm_view)
+        await confirm_view.wait()
 
-            # Ban user
+        if confirm_view.confirmed:
             await ctx.guild.ban(user, reason=reason, delete_message_days=0)
-            await ctx.send(f"User {user.display_name} has been banned.")
+            await ctx.send(f"✅ User {user.display_name} has been banned.")
+            db.record_ban(user_id, ctx.guild.id, ctx.author.id, reason, evidence)
+        else:
+            await ctx.send("❌ Ban cancelled.")
+
+            # await ctx.send("Please state the reason for the ban:")
+        #
+        # def check(m):
+        #     return m.author == ctx.author and m.channel == ctx.channel
+        #
+        # try:
+        #     reason_msg = await self.bot.wait_for('message', check=check, timeout=120)
+        #     reason = reason_msg.content
+        #
+        #     await ctx.send("Please provide evidence (e.g. message links, screenshots):")
+        #     evidence_msg = await self.bot.wait_for('message', check=check, timeout=120)
+        #     evidence = evidence_msg.content
+        #
+        #     # Confirmation prompt
+        #     await ctx.send(f"Ban user {user.display_name} for reason:\n**{reason}**\nEvidence:\n{evidence}\nType 'confirm' to ban or 'cancel' to abort.")
+        #
+        #     confirm_msg = await self.bot.wait_for('message', check=check, timeout=60)
+        #     if confirm_msg.content.lower() != 'confirm':
+        #         await ctx.send("Ban cancelled.")
+        #         return
+        #
+        #     # Ban user
+        #     await ctx.guild.ban(user, reason=reason, delete_message_days=0)
+        #     await ctx.send(f"User {user.display_name} has been banned.")
 
             # Save ban to DB
             db.record_ban(user_id, ctx.guild.id, ctx.author.id, reason, evidence)
@@ -109,8 +204,8 @@ class Ban(commands.Cog):
                 await vote_msg.add_reaction("✅")
                 await vote_msg.add_reaction("❌")
 
-        except asyncio.TimeoutError:
-            await ctx.send("Timeout: ban command cancelled.")
+        # except asyncio.TimeoutError:
+        #     await ctx.send("Timeout: ban command cancelled.")
 
 
 async def setup(bot):
