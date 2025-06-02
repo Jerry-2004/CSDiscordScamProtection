@@ -15,6 +15,8 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
+intents.guilds = True
+intents.messages = True
 
 bot = commands.Bot(command_prefix=constants.COMMAND_PREFIX, intents=intents, help_command=None)
 

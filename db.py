@@ -74,10 +74,13 @@ def is_guild_whitelisted(guild_id: int) -> bool:
         return c.fetchone() is not None
 
 
-def get_all_whitelisted_guilds():
+def get_all_whitelisted_guilds(exclude_guild_id=None):
     with connect() as conn:
         c = conn.cursor()
-        c.execute("SELECT guild_id FROM whitelisted_guilds")
+        if exclude_guild_id:
+            c.execute("SELECT guild_id FROM whitelisted_guilds WHERE guild_id != ?", (str(exclude_guild_id),))
+        else:
+            c.execute("SELECT guild_id FROM whitelisted_guilds")
         return [int(row[0]) for row in c.fetchall()]
 
 
