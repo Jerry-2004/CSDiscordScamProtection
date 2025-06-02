@@ -84,8 +84,8 @@ class Ban(commands.Cog):
                     title="⚠️ Cross-Server Ban Vote Requested",
                     description=(
                         f"**User:** `{user.display_name}` (`{user.id}`)\n"
-                        f"**Reason:** `{reason}\n"
-                        f"**Evidence**: `{evidence}\n\n"
+                        f"**Reason:** `{reason}`\n"
+                        f"**Evidence:** `{evidence}`\n\n"
                         f"React with ✅ to support the ban, ❌ to reject."
                     ),
                     color=discord.Color.orange()
