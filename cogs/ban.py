@@ -21,6 +21,10 @@ class Ban(commands.Cog):
             await ctx.send(f"User with ID {user_id} not found in this server.")
             return
 
+        if user.id == ctx.author.id:
+            await ctx.send("You cannot ban yourself.")
+            return
+
         await ctx.send(f"Preparing to ban user {user.display_name} (ID: {user_id}).")
         await ctx.send("Please state the reason for the ban:")
 
