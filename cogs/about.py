@@ -10,7 +10,7 @@ class About(commands.Cog):
 
     @commands.command(name='about')
     # TODO - unsure whether to add a check for moderator here
-    @commands.check(is_moderator())
+    @is_moderator()
     async def about(self, ctx):
 
         guild = ctx.guild
