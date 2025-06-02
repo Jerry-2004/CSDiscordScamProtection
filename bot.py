@@ -60,11 +60,7 @@ async def on_ready():
                 overwrites=overwrites,
                 reason="Creating mod-only channel for scam reports."
             )
-            await mod_channel.send("Mod channel created - bot is online.")
-
-        else:
-            # Channel exists, so just send bot online message
-            await mod_channel.send("Bot is online.")
+            await mod_channel.send("Mod channel created")
 
 
 @bot.event

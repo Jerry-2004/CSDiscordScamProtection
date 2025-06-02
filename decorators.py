@@ -20,3 +20,9 @@ def is_whitelisted():
         return db.is_guild_whitelisted(ctx.guild.id)
 
     return commands.check(predicate)
+
+
+# Decorator function to block cogs from being used outside of designated channel.
+# def check_channel():
+#     async def predicate(ctx):
+#         if ctx.guild.
